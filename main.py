@@ -3333,6 +3333,9 @@ class Meal_Plan_Screen(MDScreen):
     def __init__(self, *args, **kwargs):
         super(Meal_Plan_Screen,self).__init__(*args, **kwargs)
         s = Session()
+        print(kivy.__version__)
+        print(kivymd.__version__)
+        print(sqlalchemy.__version__)
         active_meal_plan = s.get(Meal_Plan,s.query(Active).first().meal_plan_id)
         if active_meal_plan:
             self.breakfast = active_meal_plan.breakfast
