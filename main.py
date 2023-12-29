@@ -1,22 +1,26 @@
 import kivy
-from kivy.app import App
+import kivymd
+from kivymd.app import MDApp
 from kivy.uix.pagelayout import PageLayout
 from kivy.properties import NumericProperty
-from kivy.uix.button import Button
+from kivymd.uix.button import MDRoundFlatButton, MDRaisedButton
 from sqlalchemy import func, Table, Column, Integer, ForeignKey, String, CHAR, Float, Boolean, create_engine
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import and_, or_
+import random as rd
+from sympy import Rational, pretty
+import math as m
 
-engine = create_engine("sqlite:///My_Data.db", echo=False) 
+engine = create_engine("sqlite:///My_new_Data.db", echo=False) 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
 class Test(Base):
     __tablename__ = "Test"
     id = Column(Integer, primary_key=True)
-    b1 = Column(Integer)
-    b2 = Column(Integer)
+    b1 = Column(Float)
+    b2 = Column(String)
     b3 = Column(Integer)
     b4 = Column(Integer)
     b5 = Column(Integer)
@@ -24,10 +28,8 @@ class Test(Base):
     b7 = Column(Integer)
     b8 = Column(Integer)
     b9 = Column(Integer)
-    b10 = Column(Integer)
-    b11 = Column(Integer) 
 
-    def __init__(self, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11):
+    def __init__(self, b1, b2, b3, b4, b5, b6, b7, b8, b9):
         self.b1 = b1
         self.b2 = b2
         self.b3 = b3
@@ -37,15 +39,13 @@ class Test(Base):
         self.b7 = b7
         self.b8 = b8
         self.b9 = b9
-        self.b10 = b10
-        self.b11 = b11
 
-class CustomButton(Button):
+class CustomButton(MDRoundFlatButton):
 
     btn_id = NumericProperty(0)
 
     def __init__(self, **kwargs):
-        super(Button, self).__init__(**kwargs)
+        super(CustomButton, self).__init__(**kwargs)
     
 
 class main_logic(PageLayout):
@@ -54,22 +54,29 @@ class main_logic(PageLayout):
         super(main_logic, self).__init__(**kwargs)
     
     def increment_counter(self,btn):
-        btn.text = str(int(btn.text) + 1)
+        btn.text = str(int(btn.text[0]) + 1)
     
+    def increment_counter_test_random(self):
+        self.ids.b1.text = str(rd.randint(0,100))
+
+    def increment_counter_test_math(self):
+        self.ids.b1.text = str(m.sqrt(int(self.ids.b1.text)))
+
+    def increment_counter_test_sympy(self):
+        self.ids.b2.text = str(pretty(Rational(int(self.ids.b2.text),int(self.ids.b3.text))))
+
     def safe(self):
         s = Session()
         s.query(Test).update(
-            {"b1":int(self.ids.b1.text),
-             "b2":int(self.ids.b2.text),
+            {"b1":float(self.ids.b1.text),
+             "b2":str(self.ids.b2.text),
              "b3":int(self.ids.b3.text),
              "b4":int(self.ids.b4.text),
              "b5":int(self.ids.b5.text),
              "b6":int(self.ids.b6.text),
              "b7":int(self.ids.b7.text),
              "b8":int(self.ids.b8.text),
-             "b9":int(self.ids.b9.text),
-             "b10":int(self.ids.b10.text),
-             "b11":int(self.ids.b11.text)})
+             "b9":int(self.ids.b9.text)})
         s.commit()
         s.close()
 
@@ -88,16 +95,16 @@ class main_logic(PageLayout):
             self.ids.b7.text = str(d.b7)
             self.ids.b8.text = str(d.b8)
             self.ids.b9.text = str(d.b9)
-            self.ids.b10.text = str(d.b10)
-            self.ids.b11.text = str(d.b11)
         else:
-            d = Test(1,1,1,1,1,1,1,1,1,1,1)
+            d = Test(1,1,1,1,1,1,1,1,1)
             session.add(d)
             session.commit()
             session.close()
 
-class mainapp(App):
+class mainapp(MDApp):
     def build(self):
+        self.theme_cls.theme_style = "Dark"
+        self.theme_cls.primary_palette = "Orange"
         return main_logic()
     
     def on_start(self):
