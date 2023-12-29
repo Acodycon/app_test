@@ -1,5 +1,8 @@
 import kivy
 import kivymd
+import sqlalchemy
+import random as rd
+import math as m
 
 from kivy.config import Config
 from sqlalchemy import func, Table, Column, Integer, ForeignKey, String, CHAR, Float, Boolean, create_engine
@@ -8,8 +11,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import and_, or_
 from calorie_calculator import compute_BMR, compute_TDEE
 from CKC import *
-import random as rd
-import math as m
 
 from kivy.lang import Builder
 from kivy.app import App
