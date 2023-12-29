@@ -41,6 +41,8 @@ jobs:
           repository_root: master
           workdir: .
           buildozer_version: stable
+          pre_build_commands: |
+            python -m pip install mpmath
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
