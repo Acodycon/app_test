@@ -10,8 +10,6 @@ main_logic
     b7: b7
     b8: b8
     b9: b9
-    b10: b10
-    b11: b11
     GridLayout:
         cols:3
         rows:4
@@ -20,7 +18,7 @@ main_logic
             btn_id: 1
             text: "1"
             on_release:
-                root.increment_counter(self)
+                root.increment_counter_test_random()
         CustomButton:
             id: b2
             btn_id: 2
@@ -69,19 +67,15 @@ main_logic
             text: "1"
             on_release:
                 root.increment_counter(self)
-        CustomButton:
-            id: b10
-            btn_id: 10
+        MDRaisedButton:
             text: "1"
             on_release:
-                root.increment_counter(self)
-        CustomButton:
-            id: b11
-            btn_id: 11
-            text: "1"
+                root.increment_counter_test_sympy()
+        MDRaisedButton:
+            text: "sqrt test"
             on_release:
-                root.increment_counter(self)
-        Button:
+                root.increment_counter_test_math()
+        MDRaisedButton:
             text: "safe"
             on_release:
                 root.safe()
