@@ -1,6 +1,6 @@
 import kivy
 import kivymd
-from kivymd.app import MDApp
+from kivy.app import App
 from kivy.uix.pagelayout import PageLayout
 from kivy.properties import NumericProperty
 from kivymd.uix.button import MDRoundFlatButton, MDRaisedButton
@@ -9,7 +9,6 @@ from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import and_, or_
 import random as rd
-from sympy import Rational, pretty
 import math as m
 
 engine = create_engine("sqlite:///My_new_Data.db", echo=False) 
@@ -63,7 +62,7 @@ class main_logic(PageLayout):
         self.ids.b1.text = str(m.sqrt(int(self.ids.b1.text)))
 
     def increment_counter_test_sympy(self):
-        self.ids.b2.text = str(pretty(Rational(int(self.ids.b2.text),int(self.ids.b3.text))))
+        self.ids.b2.text = f"{int(self.ids.b2.text)}/{int(self.ids.b3.text)}"
 
     def safe(self):
         s = Session()
@@ -101,7 +100,7 @@ class main_logic(PageLayout):
             session.commit()
             session.close()
 
-class mainapp(MDApp):
+class mainapp(App):
     def build(self):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
