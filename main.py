@@ -1,6 +1,6 @@
 import kivy
 import kivymd
-from kivy.app import App
+from kivymd.app import MDApp
 from kivy.uix.pagelayout import PageLayout
 from kivy.properties import NumericProperty
 from kivymd.uix.button import MDRoundFlatButton, MDRaisedButton
@@ -11,7 +11,7 @@ from sqlalchemy import and_, or_
 import random as rd
 import math as m
 
-engine = create_engine("sqlite:///My_new_Data.db", echo=False) 
+engine = create_engine("sqlite:///My_Data.db", echo=False) 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
@@ -100,7 +100,7 @@ class main_logic(PageLayout):
             session.commit()
             session.close()
 
-class mainapp(App):
+class mainapp(MDApp):
     def build(self):
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "Orange"
@@ -109,5 +109,6 @@ class mainapp(App):
     def on_start(self):
         Base.metadata.create_all(engine)
         self.root.load_data_from_database()
+
 if __name__ == "__main__":
     mainapp().run()
