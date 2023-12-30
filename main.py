@@ -456,7 +456,7 @@ class Settings_Screen(MDScreen):
         }
         if self.active_settings_id:
             s = Session()
-            active_settings = s.get(Settings, self.active_settings_id)
+            active_settings = s.query(Settings).get(self.active_settings_id)
             self.ids.profile_name_input.text = active_settings.name
             self.ids.gender_input.icon = icon_dict[active_settings.gender]
             self.ids.gender_input.text = active_settings.gender
@@ -3235,7 +3235,7 @@ class Meal_Plan_Item(MDBoxLayout):
     
     def get_stats(self):
         s = Session()
-        self.meal = s.get(Meal,self.meal_id)
+        self.meal = s.query(Meal).get(self.meal_id)
         self.meal_name = self.meal.name
         self.sweet_savory = self.meal.sweet_savory
         self.hot_cold = self.meal.hot_cold
@@ -3337,7 +3337,7 @@ class Meal_Plan_Screen(MDScreen):
         print(kivy.__version__)
         print(kivymd.__version__)
         print(sqlalchemy.__version__)
-        active_meal_plan = s.get(Meal_Plan,s.query(Active).first().meal_plan_id)
+        active_meal_plan = s.query(Meal_Plan).get(s.query(Active).first().meal_plan_id)
         if active_meal_plan:
             self.breakfast = active_meal_plan.breakfast
             self.breakfast_percentage = active_meal_plan.breakfast_percentage
@@ -3387,7 +3387,7 @@ class Meal_Plan_Screen(MDScreen):
         c.popup_meal_plan_settings = self.popup_meal_plan_settings
         if self.active_meal_plan_id:
             s = Session()
-            active_meal_plan_settings = s.get(Meal_Plan,s.query(Active).first().meal_plan_id)
+            active_meal_plan_settings = s.query(Meal_Plan).get(s.query(Active).first().meal_plan_id)
             c.ids.breakfast.active = active_meal_plan_settings.breakfast
             c.ids.lunch.active = active_meal_plan_settings.lunch
             c.ids.dinner.active = active_meal_plan_settings.dinner
@@ -3602,7 +3602,7 @@ class Meal_Plan_Screen(MDScreen):
     
     def load_meal_plan_settings(self,meal_plan_id):
         s = Session()
-        meal_plan = s.get(Meal_Plan,meal_plan_id)
+        meal_plan = s.query(Meal_Plan).get(meal_plan_id)
         self.breakfast = meal_plan.breakfast
         self.lunch = meal_plan.lunch
         self.snack = meal_plan.snack
@@ -3787,7 +3787,7 @@ class Meal_Plan_Screen(MDScreen):
                 self.ids.current_meal_plan_display_name.text = f"Day: {self.ids.meal_plan.page + 1} // Calories: {round(sum(i.meal_calories for i in self.meal_plan.children[self.day_range-self.ids.meal_plan.page - 1].children[0].children[::-1] if isinstance(i, Meal_Plan_Item)),2)}"
         else:
             s = Session()
-            self.ids.current_meal_plan_display_name.text = f"{s.get(Meal_Plan,self.active_meal_plan_id).name}: // Day: {self.ids.meal_plan.page + 1} // Calories: {round(sum(i.meal_calories for i in self.meal_plan.children[self.day_range-self.ids.meal_plan.page - 1].children[0].children[::-1] if isinstance(i, Meal_Plan_Item)),2)}"
+            self.ids.current_meal_plan_display_name.text = f"{s.query(Meal_Plan).get(self.active_meal_plan_id).name}: // Day: {self.ids.meal_plan.page + 1} // Calories: {round(sum(i.meal_calories for i in self.meal_plan.children[self.day_range-self.ids.meal_plan.page - 1].children[0].children[::-1] if isinstance(i, Meal_Plan_Item)),2)}"
             s.close()
 
     def generate_shopping_list(self):
@@ -3916,7 +3916,7 @@ class Delete_Meal_Plan_Dialog(MDBoxLayout):
 
     def delete(self):
         s = Session()
-        meal_plan_to_delete = s.get(Meal_Plan,self.meal_plan_id)
+        meal_plan_to_delete = s.query(Meal_Plan).get(self.meal_plan_id)
         s.delete(meal_plan_to_delete)
         s.commit()
         s.close()
@@ -4023,7 +4023,7 @@ class Meal_Plan_Already_Exists_Dialog(MDBoxLayout):
     
     def overwrite_meal_plan(self):
         s = Session()
-        meal_plan_query = s.get(Meal_Plan,self.meal_plan_id)
+        meal_plan_query = s.query(Meal_Plan).get(self.meal_plan_id)
         meal_plan_query.name = self.meal_plan_name
         meal_plan_query.breakfast = self.logic.breakfast
         meal_plan_query.breakfast_percentage = self.logic.breakfast_percentage
@@ -4292,7 +4292,7 @@ class Shopping_List_Screen(MDScreen):
             "Spice":(.95,.95,.99,1)
         }
         s = Session()
-        self.shopping_list = eval(s.get(Meal_Plan,s.query(Active).first().meal_plan_id).shopping_list) if s.query(Active).first().meal_plan_id else []
+        self.shopping_list = eval(s.query(Meal_Plan).get(s.query(Active).first().meal_plan_id).shopping_list) if s.query(Active).first().meal_plan_id else []
         s.close()
         self.sort_value = 5
         self.sort_order = True
