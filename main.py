@@ -46,11 +46,12 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.widget import Widget
 from kivymd.uix.floatlayout import MDFloatLayout
 
-
 app_path = os.path.dirname(os.path.abspath(__file__))
+print(app_path)
 db_path = os.path.join(app_path, 'Data_Base.db')
 print(db_path)
-engine = create_engine("sqlite:///" + db_path, echo=False, pool_pre_ping=True) 
+
+engine = create_engine('sqlite:///' + db_path, echo=False, pool_pre_ping=True) 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
@@ -3341,24 +3342,38 @@ class Meal_Plan_Screen(MDScreen):
         s = Session()
         print(kivy.__version__)
         print(kivymd.__version__)
-        active_meal_plan_id = s.query(Active).first().meal_plan_id
-        active_meal_plan = s.query(Meal_Plan).get(active_meal_plan_id)
-        s.close()
-        if active_meal_plan:
-            self.breakfast = active_meal_plan.breakfast
-            self.breakfast_percentage = active_meal_plan.breakfast_percentage
-            self.lunch = active_meal_plan.lunch
-            self.lunch_percentage = active_meal_plan.lunch_percentage
-            self.snack = active_meal_plan.snack
-            self.snack_percentage = active_meal_plan.snack_percentage
-            self.dinner = active_meal_plan.dinner
-            self.dinner_percentage = active_meal_plan.dinner_percentage
-            self.day_range = active_meal_plan.day_range
-            self.meal_id_and_ingredient_id__unit__amount_list = eval(active_meal_plan.meal_id_and_ingredient_id__unit__amount_list)
-            self.adjusted = active_meal_plan.adjusted
-            self.shopping_list = eval(active_meal_plan.shopping_list)
-            self.active_meal_plan_id = active_meal_plan.id
-            self.active_meal_plan_name = active_meal_plan.name
+        active = s.query(Active).first()
+        if active:
+            if active.meal_plan_id:
+                active_meal_plan = s.query(Meal_Plan).get(active.meal_plan_id)
+                self.breakfast = active_meal_plan.breakfast
+                self.breakfast_percentage = active_meal_plan.breakfast_percentage
+                self.lunch = active_meal_plan.lunch
+                self.lunch_percentage = active_meal_plan.lunch_percentage
+                self.snack = active_meal_plan.snack
+                self.snack_percentage = active_meal_plan.snack_percentage
+                self.dinner = active_meal_plan.dinner
+                self.dinner_percentage = active_meal_plan.dinner_percentage
+                self.day_range = active_meal_plan.day_range
+                self.meal_id_and_ingredient_id__unit__amount_list = eval(active_meal_plan.meal_id_and_ingredient_id__unit__amount_list)
+                self.adjusted = active_meal_plan.adjusted
+                self.shopping_list = eval(active_meal_plan.shopping_list)
+                self.active_meal_plan_id = active_meal_plan.id
+                self.active_meal_plan_name = active_meal_plan.name
+            else:
+                self.breakfast = False
+                self.breakfast_percentage = 0
+                self.lunch = False
+                self.lunch_percentage = 0
+                self.snack = False
+                self.snack_percentage = 0
+                self.dinner = False
+                self.dinner_percentage = 0
+                self.day_range = 1
+                self.meal_id_and_ingredient_id__unit__amount_list = None
+                self.shopping_list = []
+                self.adjusted = False
+                self.active_meal_plan_id = None
         else:
             self.breakfast = False
             self.breakfast_percentage = 0
