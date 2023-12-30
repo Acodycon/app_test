@@ -45,7 +45,7 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.widget import Widget
 from kivymd.uix.floatlayout import MDFloatLayout
 
-engine = create_engine("sqlite:///My_Data.db", echo=False) 
+engine = create_engine("sqlite:///My_Data.db", echo=False, pool_pre_ping=True) 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
