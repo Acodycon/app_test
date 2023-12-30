@@ -49,6 +49,7 @@ from kivymd.uix.floatlayout import MDFloatLayout
 
 app_path = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(app_path, 'Data_Base.db')
+print(db_path)
 engine = create_engine("sqlite:///" + db_path, echo=False, pool_pre_ping=True) 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
