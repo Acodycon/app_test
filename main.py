@@ -3,6 +3,7 @@ import kivymd
 import sqlalchemy
 import random as rd
 import math as m
+import os
 
 from kivy.config import Config
 from sqlalchemy import func, Table, Column, Integer, ForeignKey, String, CHAR, Float, Boolean, create_engine
@@ -45,7 +46,10 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.widget import Widget
 from kivymd.uix.floatlayout import MDFloatLayout
 
-engine = create_engine("sqlite:///My_Data.db", echo=False, pool_pre_ping=True) 
+
+app_path = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(app_path, 'Data_Base.db')
+engine = create_engine("sqlite:///" + db_path, echo=False, pool_pre_ping=True) 
 Session = sessionmaker(bind=engine)
 Base = declarative_base()
 
