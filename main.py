@@ -443,7 +443,9 @@ class Settings_Screen(MDScreen):
         s.close()
 
     def load_active_settings(self):
-        self.active_settings_id = Session().query(Active).first().settings_id
+        s = Session()
+        self.active_settings_id = s.query(Active).first().settings_id
+        s.close()
         icon_dict = {
             "Male":"gender-male",
             "Female":"gender-female",
@@ -493,7 +495,6 @@ class Settings_Screen(MDScreen):
             self.ids.bmr.text = ""
             self.ids.tdee.text = ""
             self.ids.calories_per_day.text = ""
-        s.close()
     
     def open_settings_search(self):
         c = Settings_Dialog()
