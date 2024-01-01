@@ -6,6 +6,7 @@ from kivymd.uix.button import MDIconButton
 from kivymd.uix.list import ThreeLineAvatarIconListItem, ThreeLineListItem
 from kivy.properties import NumericProperty, StringProperty, ObjectProperty
 
+
 class Custom_MDGridLayout(MDGridLayout):
 
     def __init__(self, **kwargs):
@@ -40,8 +41,8 @@ class MDIconButtonSpinner(MDIconButton):
     text = ObjectProperty(None)
     value = ObjectProperty(None)
 
-class ThreeLineAvatarIconObjectListItem(ThreeLineAvatarIconListItem):
-    obj = ObjectProperty(None)
+class ThreeLineAvatarIconIDSListItem(ThreeLineAvatarIconListItem):
+    settings_id = NumericProperty(None)
     asc_obj_id = NumericProperty(None)
     meal_id = NumericProperty(None)
     ingredient_id = NumericProperty(None)
