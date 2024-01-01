@@ -6,7 +6,6 @@ import math as m
 import os
 
 
-from icecream import ic
 from kivy.config import Config
 Config.set("graphics", "width","540")
 Config.set("graphics", "height","1200")
@@ -3026,7 +3025,6 @@ class Add_Ing_To_Meal_Unit_Gram_Ml_Dialog(MDBoxLayout):
         self.ids.amount_input.text = str(int(self.ids.amount_input.text) + 1)
 
     def decrement_amount_button_check_validity(self):
-        ic(self.ids.amount_input.text)
         if self.ids.amount_input.text != "":
             if int(self.ids.amount_input.text) > 1:
                 self.ids.decrement_amount_button.disabled = False
@@ -3350,7 +3348,6 @@ class Swap_Options_Dialog(MDBoxLayout):
         if new_meal_id_list:
             new_random_meal_id = rd.choice(new_meal_id_list)
             self.logic.meal_id = new_random_meal_id
-            ic(self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list)
             self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1]][0] = new_random_meal_id
             self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1]][1] = [[i.ingredient_id,i.ingredient.unit,i.ingredient.calories,i.ingredient.fats,i.ingredient.carbohydrates,i.ingredient.proteins,i.amount_numerator,i.amount_denominator,i.ingredient.name,i.ingredient.type] for i in s.query(Association).filter(Association.meal_id == new_random_meal_id).all()]
             self.logic.meal_plan_screen.adjusted = False
@@ -3797,7 +3794,6 @@ class Meal_Plan_Screen(MDScreen):
     def adjust_calories(self):
         if self.adjust_calories_button_check_validity() and not self.adjust_calories_button_info_opened:
             if MDApp.get_running_app().root.ids.settings_screen.ids.calories_per_day.text != "":
-                ic()
                 calorie_goal = float(MDApp.get_running_app().root.ids.settings_screen.ids.calories_per_day.text)
                 below = False
                 for i in range(self.day_range)[::-1]: # one loop = one day # Backwards to keep the order correct cause kivy iterates backwards over the children by default
@@ -3919,7 +3915,6 @@ class Load_Meal_Plan_Dialog(MDBoxLayout):
                 on_release=self.open_select_meal_plan_options_dialog
                 )
             )
-            ic(i.cals_per_day)
         s.close()
 
     def open_select_meal_plan_options_dialog(self,listitem):
