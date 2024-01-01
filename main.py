@@ -5,6 +5,7 @@ import random as rd
 import math as m
 import os
 
+
 from kivy.config import Config
 from sqlalchemy import func, Table, Column, Integer, ForeignKey, String, CHAR, Float, Boolean, create_engine
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
@@ -204,6 +205,22 @@ class Settings_Screen(MDScreen):
 
     def __init__(self, *args, **kwargs):
         super(Settings_Screen,self).__init__(*args, **kwargs)
+        self.icon_dict = {
+            "Male":"gender-male",
+            "Female":"gender-female",
+            "1.0":"cancel",
+            "1.2":"walk",
+            "1.375":"dumbbell",
+            "1.725":"weight-lifter",
+            "1.9":"weight",
+            "-1100.0":"arrow-down-bold-circle",
+            "-550.0":"arrow-down-bold-circle-outline",
+            "-275.0":"arrow-down-bold-outline",
+            "0.0":"checkbox-blank-circle-outline",
+            "275.0":"arrow-up-bold-outline",
+            "550.0":"arrow-up-bold-circle-outline",
+            "1100.0":"arrow-up-bold-circle"
+        }
         s = Session()
         self.active_settings_id = s.query(Active).first().settings_id
         s.close()
@@ -242,6 +259,7 @@ class Settings_Screen(MDScreen):
         self.ids.gender_input.text = text
         self.ids.gender_input.icon = icon
         self.menu_list_gender.dismiss()
+        self.open_activity_dropdown() if not self.active_settings_id else None
         self.display_BMR()
         self.display_TDEE()
         self.display_cals_per_day()
@@ -296,6 +314,7 @@ class Settings_Screen(MDScreen):
         self.ids.activity_input.text = text
         self.ids.activity_input.icon = icon
         self.menu_list_activity.dismiss()
+        self.open_weightgain_dropdown() if not self.active_settings_id else None
         self.display_BMR()
         self.display_TDEE()
         self.display_cals_per_day()
@@ -364,6 +383,7 @@ class Settings_Screen(MDScreen):
         self.ids.weight_gain_input.text = text
         self.ids.weight_gain_input.icon = icon
         self.menu_list_weightgain.dismiss()
+        self.ids.weight_input.focus = True if not self.active_settings_id else False
         self.display_cals_per_day()
 
     def display_BMR(self):
@@ -399,17 +419,18 @@ class Settings_Screen(MDScreen):
             settings_query = s.query(Settings).filter(Settings.name == self.ids.profile_name_input.text).first()
             if not settings_query:
                 new_setting = Settings(
-                    self.ids.profile_name_input.text,
-                    self.ids.gender_input.text,
-                    float(self.ids.weight_input.text),
-                    float(self.ids.height_input.text),
-                    float(self.ids.age_input.text),
-                    float(self.ids.activity_input.text),
-                    float(self.ids.weight_gain_input.text),
-                    float(self.ids.calories_per_day.text))
+                    name=self.ids.profile_name_input.text,
+                    gender=self.ids.gender_input.text,
+                    weight=float(self.ids.weight_input.text),
+                    height=float(self.ids.height_input.text),
+                    age=float(self.ids.age_input.text),
+                    activity=float(self.ids.activity_input.text),
+                    weight_gain_goal=float(self.ids.weight_gain_input.text),
+                    calories_per_day=float(self.ids.calories_per_day.text))
                 s.add(new_setting)
                 s.commit()
                 s.query(Active).first().settings_id = new_setting.id
+                self.active_settings_id = new_setting.id
                 s.commit()
                 s.close()
             else:
@@ -418,6 +439,7 @@ class Settings_Screen(MDScreen):
                 self.settings_already_exist_dialog = MDDialog(
                     title="Profile already exists, would you like to overwrite?",
                     type="custom",
+                    size_hint=(0.9,None),
                     content_cls=c,
                     radius=[20, 7, 20, 7]
                 )
@@ -429,7 +451,7 @@ class Settings_Screen(MDScreen):
     
     def update_settings(self): # is expected to only be called from save settings function with all fields filled
         s = Session()
-        settings_query = s.query(Settings).filter(Settings.id == self.active_settings_id).update({
+        s.query(Settings).filter(Settings.id == self.active_settings_id).update({
             Settings.name: self.ids.profile_name_input.text,
             Settings.gender: self.ids.gender_input.text,
             Settings.weight: float(self.ids.weight_input.text),
@@ -446,34 +468,18 @@ class Settings_Screen(MDScreen):
         s = Session()
         self.active_settings_id = s.query(Active).first().settings_id
         s.close()
-        icon_dict = {
-            "Male":"gender-male",
-            "Female":"gender-female",
-            "1.0":"cancel",
-            "1.2":"walk",
-            "1.375":"dumbbell",
-            "1.725":"weight-lifter",
-            "1.9":"weight",
-            "-1100.0":"arrow-down-bold-circle",
-            "-550.0":"arrow-down-bold-circle-outline",
-            "-275.0":"arrow-down-bold-outline",
-            "0.0":"checkbox-blank-circle-outline",
-            "275.0":"arrow-up-bold-outline",
-            "550.0":"arrow-up-bold-circle-outline",
-            "1100.0":"arrow-up-bold-circle"
-        }
         if self.active_settings_id:
             s = Session()
             active_settings = s.query(Settings).get(self.active_settings_id)
             self.ids.profile_name_input.text = active_settings.name
-            self.ids.gender_input.icon = icon_dict[active_settings.gender]
+            self.ids.gender_input.icon = self.icon_dict[active_settings.gender]
             self.ids.gender_input.text = active_settings.gender
             self.ids.weight_input.text = str(active_settings.weight)
             self.ids.height_input.text = str(active_settings.height)
             self.ids.age_input.text = str(active_settings.age)
-            self.ids.activity_input.icon = icon_dict[active_settings.activity]
+            self.ids.activity_input.icon = self.icon_dict[active_settings.activity]
             self.ids.activity_input.text = str(active_settings.activity)
-            self.ids.weight_gain_input.icon = icon_dict[active_settings.weight_gain_goal]
+            self.ids.weight_gain_input.icon = self.icon_dict[active_settings.weight_gain_goal]
             self.ids.weight_gain_input.text = str(active_settings.weight_gain_goal)
             self.ids.calories_per_day.text = str(active_settings.calories_per_day)
             s.close()
@@ -501,6 +507,7 @@ class Settings_Screen(MDScreen):
         self.popup_base = MDDialog(
             title= "Search Setting Profiles",
             type="custom",
+            size_hint=(0.9,None),
             content_cls=c,
             on_open=c.display_search
         )
@@ -518,11 +525,9 @@ class Settings_Already_Exist_Dialog(MDBoxLayout):
         
 class Settings_Dialog(MDBoxLayout):
 
-    def display_search(self,instance):
-        """
-        instance is expected to be a MDTextField
-        """
-        icon_dict = {
+    def __init__(self, *args, **kwargs):
+        super(Settings_Dialog, self).__init__(*args, **kwargs)
+        self.icon_dict = {
             "Male":"gender-male",
             "Female":"gender-female",
             "1.0":"cancel",
@@ -538,6 +543,11 @@ class Settings_Dialog(MDBoxLayout):
             "550.0":"arrow-up-bold-circle-outline",
             "1100.0":"arrow-up-bold-circle"
         }
+
+    def display_search(self,instance):
+        """
+        instance is expected to be a MDTextField
+        """
         search = instance.text
         s = Session()
         settings_query = s.query(Settings).filter(Settings.name.contains(search)).all()
@@ -545,39 +555,35 @@ class Settings_Dialog(MDBoxLayout):
             if settings_query:
                 self.ids.settings_search_result_list.clear_widgets()
                 for i in settings_query:
-                    Item = ThreeLineAvatarIconObjectListItem(
+                    Item = ThreeLineAvatarIconIDSListItem(
                         text=i.name,
-                        obj=i,
+                        settings_id=i.id,
                         secondary_text=f"{i.weight} kg",
                         tertiary_text=f"{i.height} cm",
                         on_release=self.open_profile_settings
                     )
-                    Icon_l = IconLeftWidget(icon=icon_dict[str(i.weight_gain_goal)])
-                    Icon_r = IconRightWidget(icon=icon_dict[str(i.activity)])
-                    Item.add_widget(Icon_l)
-                    Item.add_widget(Icon_r)
+                    Item.add_widget(IconLeftWidget(icon=self.icon_dict[str(i.weight_gain_goal)]))
+                    Item.add_widget(IconRightWidget(icon=self.icon_dict[str(i.activity)]))
                     self.ids.settings_search_result_list.add_widget(Item)
             else:
                 self.ids.settings_search_result_list.clear_widgets()
         else:
             self.ids.settings_search_result_list.clear_widgets()
             for i in s.query(Settings).all():
-                Item = ThreeLineAvatarIconObjectListItem(
+                Item = ThreeLineAvatarIconIDSListItem(
                     text=i.name,
-                    obj=i,
+                    settings_id=i.id,
                     secondary_text=f"{i.weight} kg",
                     tertiary_text=f"{i.height} cm",
                     on_release=self.open_profile_settings
                 )
-                Icon_l = IconLeftWidget(icon=icon_dict[str(i.weight_gain_goal)])
-                Icon_r = IconRightWidget(icon=icon_dict[str(i.activity)])
-                Item.add_widget(Icon_l)
-                Item.add_widget(Icon_r)
+                Item.add_widget(IconLeftWidget(icon=self.icon_dict[str(i.weight_gain_goal)]))
+                Item.add_widget(IconRightWidget(icon=self.icon_dict[str(i.activity)]))
                 self.ids.settings_search_result_list.add_widget(Item)
         s.close()
     
     def open_profile_settings(self,instance): #instance is expected to be a ThreeLineListItem
-        c = Settings_Settings_Dialog(obj=instance.obj)
+        c = Settings_Settings_Dialog(settings_id=instance.settings_id)
         self.popup_layer2 = MDDialog(
             title=instance.text,
             type="custom",
@@ -590,15 +596,17 @@ class Settings_Dialog(MDBoxLayout):
 
 class Settings_Settings_Dialog(MDBoxLayout):
     
-    def __init__(self,obj):
+    def __init__(self,settings_id):
         super(Settings_Settings_Dialog,self).__init__()
-        self.obj = obj
+        self.settings_id = settings_id
+        self.settings_screen = MDApp.get_running_app().root.ids.settings_screen
 
     def delete(self):
-        c = Delete_Settings_Dialog(obj=self.obj)
+        c = Delete_Settings_Dialog(settings_id=self.settings_id)
         self.popup_delete_layer3 = MDDialog(
             title="Delete profile?",
             type="custom",
+            size_hint=(0.9, None),
             content_cls=c,
             radius=[20, 7, 20, 7]
         )
@@ -608,30 +616,26 @@ class Settings_Settings_Dialog(MDBoxLayout):
         self.popup_delete_layer3.open()
 
     def use(self):
-        Settings_Screen = MDApp.get_running_app().root.ids.screen_manager.get_screen("Settings_Screen")
-        Settings_Screen.active_settings = self.obj
         s = Session()
-        active = s.query(Active).first()
-        if active:
-            active.settings_id = self.obj.id
-        else:
-            s.add(Active(settings_id=self.obj.id))
+        s.query(Active).update({Active.settings_id:self.settings_id})
         s.commit()
         s.close()
-        Settings_Screen.load_active_settings()
+        self.settings_screen.active_settings_id = self.settings_id
+        self.settings_screen.load_active_settings()
         self.popup_base.dismiss()
         self.popup_layer2.dismiss()
 
 class Delete_Settings_Dialog(MDBoxLayout):
     
-    def __init__(self,obj):
+    def __init__(self,settings_id):
         super().__init__()
-        self.obj = obj
+        self.settings_id = settings_id
         self.settings_screen = MDApp.get_running_app().root.ids.settings_screen
 
     def delete(self):
         s = Session()
-        s.delete(self.obj)
+        s.delete(s.query(Settings).get(self.settings_id))
+        s.query(Active).update({Active.settings_id:None})
         s.commit()
         s.close()
         self.settings_screen.load_active_settings()
@@ -711,7 +715,7 @@ class Ingredients_Screen(MDScreen):
         self.ids.ingredients_display_list.clear_widgets()
         for i in self.display_ingredient_id_and_stats_list:
             if self.ing_search.lower() in i[1].lower():
-                Item = ThreeLineAvatarIconObjectListItem(
+                Item = ThreeLineAvatarIconIDSListItem(
                     ingredient_id=i[0],
                     text=i[1],
                     secondary_text=f"{i[2]} kcals" if self.sort_value == 2 or self.sort_value == 4 else f"{i[5]} grams of fat" if self.sort_value == 5 else f"{i[6]} grams of carbohydrates" if self.sort_value == 6 else f"{i[7]} grams of protein",
@@ -1205,6 +1209,7 @@ class Add_Ingredient_Dialog(MDBoxLayout):
         self.ids.add_ing_type.icon = icon
         self.ids.add_ing_type.text = text
         self.menu_list_type.dismiss()
+        self.ids.add_ing_calories.focus = True
         self.add_button_check_validity()
     
     def open_unit_dropdown(self):
@@ -1243,6 +1248,7 @@ class Add_Ingredient_Dialog(MDBoxLayout):
         self.ids.add_ing_unit.icon = icon
         self.ids.add_ing_unit.text = text
         self.menu_list_unit.dismiss()
+        self.open_type_dropdown()
         self.add_ing_divisibility_check_validity()
         self.add_button_check_validity()
     
@@ -1856,8 +1862,8 @@ class Meals_Screen(MDScreen):
                 icon_sweet_savor_color = self.meal_icon_color_dict[icon_sweet_savory]
                 icon_type = self.meal_icon_dict["breakfast_hot" if i.breakfast and not i.hot_cold else "breakfast_cold" if i.breakfast and i.hot_cold else "dinner_lunch_hot" if i.dinner and not i.hot_cold or i.lunch and not i.hot_cold else "dinner_lunch_cold" if i.dinner and i.hot_cold or i.lunch and i.hot_cold else "snack_sweet" if i.snack and not i.sweet_savory else "snack_savory"]
                 icon_type_color = self.meal_icon_color_dict[icon_type]
-                Item = ThreeLineAvatarIconObjectListItem(
-                    obj=i,
+                Item = ThreeLineAvatarIconIDSListItem(
+                    meal_id=i.id,
                     text=i.name,
                     secondary_text=f"{round(i.calories,2)} kcals",
                     tertiary_text=f"{round(i.proteins,2)}g protein, {round(i.carbohydrates,2)}g carbs, {round(i.fats,2)}g fat",
@@ -1913,7 +1919,8 @@ class Meals_Screen(MDScreen):
         self.popup_base.open()
     
     def open_meal_options_dialog(self,listitem):
-        c = Meal_Options_Dialog(meal=listitem.obj)
+        c = Meal_Options_Dialog(meal_id=listitem.meal_id,
+                                meal_name=listitem.text)
         self.popup_base = MDDialog(
             title="Meal Options",
             type="custom",
@@ -2055,15 +2062,16 @@ class Meal_Already_Exists_Dialog(MDBoxLayout):
 
 class Meal_Options_Dialog(MDBoxLayout):
 
-    def __init__(self, meal, *args, **kwargs):
+    def __init__(self, meal_id, meal_name, *args, **kwargs):
         super(Meal_Options_Dialog, self).__init__(*args, **kwargs)
-        self.meal = meal
+        self.meal_id = meal_id
+        self.meal_name = meal_name
         self.screen_manager = MDApp.get_running_app().root.ids.screen_manager
 
     def open_delete_meal_dialog(self):
-        c = Delete_Meal_Dialog(self.meal)
+        c = Delete_Meal_Dialog(meal_id=self.meal_id)
         self.popup_layer2 = MDDialog(
-            title=f"Delete {self.meal.name} ?",
+            title=f"Delete {self.meal_name} ?",
             type="custom",
             content_cls=c,
             size_hint=(.9, None),
@@ -2076,9 +2084,9 @@ class Meal_Options_Dialog(MDBoxLayout):
     
     def edit(self):
         self.screen_manager.add_widget(
-            Display_Meal_Screen(meal_id=self.meal.id)
+            Display_Meal_Screen(meal_id=self.meal_id)
         )
-        self.screen_manager.get_screen("Display_Meal_Screen").ids.top_app_bar.title = self.meal.name
+        self.screen_manager.get_screen("Display_Meal_Screen").ids.top_app_bar.title = self.meal_name
         self.screen_manager.get_screen("Display_Meal_Screen").refresh_internal_ingredient_list()
         self.screen_manager.get_screen("Display_Meal_Screen").refresh_display_ingredient_list()
         self.screen_manager.current = "Display_Meal_Screen"
@@ -2087,17 +2095,16 @@ class Meal_Options_Dialog(MDBoxLayout):
 
 class Delete_Meal_Dialog(MDBoxLayout):
 
-    def __init__(self, meal, *args, **kwargs):
+    def __init__(self, meal_id, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.meal = meal
+        self.meal_id = meal_id
         self.meal_screen = MDApp.get_running_app().root.ids.meals_screen
     def cancel(self):
         self.popup_layer2.dismiss()
     
     def delete(self):
         s = Session()
-        s.add(self.meal)
-        s.delete(self.meal)
+        s.delete(s.query(Meal).get(self.meal_id))
         s.commit()
         s.close()
         self.meal_screen.refresh_internal_list()
@@ -2161,7 +2168,7 @@ class Display_Meal_Screen(MDScreen):
         s = Session()
         for i in s.query(Association).filter(Association.meal_id == self.meal_id).all():
             s.add(i)
-            Item = ThreeLineAvatarIconObjectListItem(
+            Item = ThreeLineAvatarIconIDSListItem(
                     asc_obj_id=i.id,
                     meal_id=i.meal_id,
                     ingredient_id=i.ingredient_id,
@@ -2374,19 +2381,6 @@ class Add_Meal_Ingredient_Dialog(MDBoxLayout):
         c.popup_ingredient_list_filter_for_add_ing_to_meal = self.popup_ingredient_list_filter_for_add_ing_to_meal
         c.set_initial_settings()
         self.popup_ingredient_list_filter_for_add_ing_to_meal.open()
-    # def refresh_all_ingredients_list(self): # this should only be called when an ingredient is added or deleted and on initialization to sort the list
-    #     s = Session()
-    #     self.all_ingredient_id_and_stats_list_sorted = [i for i in sorted([(i.id,i.name,i.unit,i.divisible_by,i.calories,i.type) for i in s.query(Ingredient).all()],key=lambda x: x[5])]
-    #     s.close()
-    #     self.refresh_internal_list()
-
-    # def refresh_internal_list(self):
-    #     self.ing_type = self.ids.filter.text if self.ids else "All"
-    #     if self.ing_type == "All":
-    #         self.display_ingredient_id_and_stats_list = self.all_ingredient_id_and_stats_list_sorted
-    #     else:
-    #         self.display_ingredient_id_and_stats_list = list(filter(lambda x: x[5] == self.ing_type,self.all_ingredient_id_and_stats_list_sorted))
-    #     self.refresh_display_list()
     def refresh_all_ingredients_list(self): # this should only be called when an ingredient is added or deleted or edited and on start to sort the list
         s = Session()
         self.all_ingredient_id_and_stats_list = [[i.id,i.name,i.unit,i.divisible_by,i.calories,i.type,i.fats,i.carbohydrates,i.proteins] for i in s.query(Ingredient).all()]
@@ -2406,7 +2400,7 @@ class Add_Meal_Ingredient_Dialog(MDBoxLayout):
         self.ids.ingredients_display_list.clear_widgets()
         for i in self.display_ingredient_id_and_stats_list:
             if self.ing_search.lower() in i[1].lower():
-                Item = ThreeLineAvatarIconObjectListItem(
+                Item = ThreeLineAvatarIconIDSListItem(
                     ingredient_id=i[0],
                     meal_id=self.meal_id,
                     text=i[1],
@@ -2466,6 +2460,7 @@ class Add_Meal_Ingredient_Dialog(MDBoxLayout):
                 c.ids.unit_label.text = listitem.ing_unit
                 c.ids.ing_stats_label.text = listitem.text
                 c.ids.meal_stats_label.text = self.meal_name
+                c.decrement_amount_button_check_validity()
                 c.refresh_stats()
                 c.confirm_button_check_validity()
                 self.popup_add_ing_gram_ml.open()
@@ -2775,6 +2770,7 @@ class Ingredient_Is_Already_In_Meal_Dialog(MDBoxLayout):
             c.display_meal_screen = self.display_meal_screen
             c.popup_add_ing_gram_ml = self.popup_add_ing_gram_ml
             c.ids.amount_input.text = str(self.amount_numerator)
+            c.decrement_amount_button_check_validity()
             c.ids.unit_label.text = self.listitem.ing_unit
             c.ids.ing_stats_label.text = self.listitem.text
             c.ids.meal_stats_label.text = self.meal_name
@@ -3018,6 +3014,24 @@ class Add_Ing_To_Meal_Unit_Gram_Ml_Dialog(MDBoxLayout):
         self.amount = s.query(Association).get(self.asc_obj_id).amount_numerator if self.caller_already_exists or self.caller_change else None
         s.close()
     
+    def increment_amount(self):
+        self.ids.amount_input.text = str(int(self.ids.amount_input.text) + 1)
+
+    def decrement_amount_button_check_validity(self):
+        if self.ids.amount_input.text != "":
+            if int(self.ids.amount_input.text) > 1:
+                self.ids.decrement_amount_button.disabled = False
+                return True
+            else:
+                return False
+        else:
+            self.ids.decrement_amount_button.disabled = True
+            return False
+
+    def decrement_amount(self):
+        if self.decrement_amount_button_check_validity():
+            self.ids.amount_input.text = str(int(self.ids.amount_input.text) - 1)
+
     def cancel(self):
         if self.caller_already_exists:
             self.popup_add_ing_gram_ml.dismiss()
@@ -3119,6 +3133,7 @@ class Meal_Ingredient_Options_Dialog(MDBoxLayout):
             c.display_meal_screen = self.display_meal_screen
             c.popup_add_ing_gram_ml = self.popup_add_ing_gram_ml
             c.ids.amount_input.text = str(self.amount_numerator)
+            c.decrement_amount_button_check_validity()
             c.ids.unit_label.text = self.ingredient_unit
             c.ids.ing_stats_label.text = self.ingredient_name
             c.ids.meal_stats_label.text = self.meal_name
@@ -3325,9 +3340,10 @@ class Swap_Options_Dialog(MDBoxLayout):
         if new_meal_id_list:
             new_random_meal_id = rd.choice(new_meal_id_list)
             self.logic.meal_id = new_random_meal_id
-            self.logic.meal_plan_screen.ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1][0]] = new_random_meal_id
-            self.logic.meal_plan_screen.ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1][1]] = [[i.ingredient_id,i.ingredient.unit,i.ingredient.calories,i.ingredient.fats,i.ingredient.carbohydrates,i.ingredient.proteins,i.amount_numerator,i.amount_denominator,i.ingredient.name] for i in s.query(Association).filter(Association.meal_id == new_meal_id_list).all()]
+            self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1]][0] = new_random_meal_id
+            self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1]][1] = [[i.ingredient_id,i.ingredient.unit,i.ingredient.calories,i.ingredient.fats,i.ingredient.carbohydrates,i.ingredient.proteins,i.amount_numerator,i.amount_denominator,i.ingredient.name,i.ingredient.type] for i in s.query(Association).filter(Association.meal_id == new_random_meal_id).all()]
             self.logic.meal_plan_screen.adjusted = False
+            self.logic.meal_plan_screen.adjust_calories_button_check_validity()
             self.logic.get_stats()
             self.logic.set_stats()
             self.popup_base.dismiss()
@@ -3601,7 +3617,7 @@ class Meal_Plan_Screen(MDScreen):
                         type="custom",
                         size_hint=(.9, None),
                         height=MDApp.get_running_app().root.height*.8,
-                        pos_hint={"center_x": .5, "center_y": .5},
+                        pos_hint={"center_x": .5, "center_y": .65},
                         content_cls=c,
                         radius=[20, 7, 20, 7]
                     )
@@ -3756,7 +3772,7 @@ class Meal_Plan_Screen(MDScreen):
         if self.adjust_calories_button_check_validity() and not self.adjust_calories_button_info_opened:
             if MDApp.get_running_app().root.ids.settings_screen.ids.calories_per_day.text != "":
                 calorie_goal = float(MDApp.get_running_app().root.ids.settings_screen.ids.calories_per_day.text)
-                below = True
+                below = False
                 for i in range(self.day_range)[::-1]: # one loop = one day # Backwards to keep the order correct cause kivy iterates backwards over the children by default
                     meal_plan_item_list = [j for j in self.meal_plan.children[i].children[0].children[::-1] if isinstance(j, Meal_Plan_Item)] # j are the boxlayouts that hold the meal data # helper variable for later !
                     calories_per_meal = [j.meal_calories for j in meal_plan_item_list] 
@@ -4246,13 +4262,9 @@ class Meal_Plan_Settings_Dialog(MDBoxLayout):
 
     def set_percentage_availability_dinner(self):
         if self.ids.dinner.active:
-            self.ids.dinner_percent_decrement_button.disabled = False
             self.ids.dinner_percent_label.text_color = (1,1,1,1)
-            self.ids.dinner_percent_increment_button.disabled = False
         else:
-            self.ids.dinner_percent_decrement_button.disabled = True
             self.ids.dinner_percent_label.text_color = (1,1,1,.25)
-            self.ids.dinner_percent_increment_button.disabled = True
             self.ids.dinner_percent_label.percentage = 0
         self.set_initial_percentages()
 
@@ -4658,6 +4670,32 @@ class Shopping_List_Filter_Dialog(MDBoxLayout):
         self.logic.refresh_internal_list()
         self.popup_shopping_list_filter.dismiss()
 
+class Text_Input_Dialog(MDBoxLayout):
+
+    def __init__(self, instance, *args, **kwargs):
+        super(Text_Input_Dialog, self).__init__(*args, **kwargs)
+        self.instance = instance
+        self.ids.text_input.hint_text = instance.hint_text
+        self.ids.text_input.text = instance.text
+        self.ids.text_input.focus = True
+
+    def apply(self,instance):
+        self.instance.text = instance.text
+        self.popup_base.dismiss()
+
+class Number_Input_Dialog(MDBoxLayout):
+
+    def __init__(self, instance, *args, **kwargs):
+        super(Number_Input_Dialog, self).__init__(*args, **kwargs)
+        self.instance = instance
+        self.ids.number_input.hint_text = instance.hint_text
+        self.ids.number_input.text = instance.text
+        self.ids.number_input.focus = True
+    
+    def apply(self,instance):
+        self.instance.text = instance.text
+        self.popup_base.dismiss()
+
 class Main_Logic(MDScreen):
 
     def __init__(self, *args, **kwargs):
@@ -4668,6 +4706,36 @@ class Main_Logic(MDScreen):
                          meal_plan_id=None))
         s.commit()
         s.close()
+
+    def open_number_input_dialog(self,instance,title):
+        if instance.focus:
+            instance.focus = False
+            c = Number_Input_Dialog(instance=instance)
+            self.popup_base = MDDialog(
+                title=title,
+                type="custom",
+                content_cls=c,
+                size_hint=(.9,None),
+                pos_hint={"center_y":.65,"center_x":.5},
+                radius=[20, 7, 20, 7]
+            )
+            c.popup_base = self.popup_base
+            self.popup_base.open()
+
+    def open_text_input_dialog(self,instance,title):
+        if instance.focus:
+            instance.focus = False
+            c = Text_Input_Dialog(instance=instance)
+            self.popup_base = MDDialog(
+                title=title,
+                type="custom",
+                content_cls=c,
+                size_hint=(.9,None),
+                pos_hint={"center_y":.65,"center_x":.5},
+                radius=[20, 7, 20, 7]
+            )
+            c.popup_base = self.popup_base
+            self.popup_base.open()
 
     def load_active_profile(self):
         s = Session()
