@@ -6,7 +6,10 @@ import math as m
 import os
 
 
+from icecream import ic
 from kivy.config import Config
+Config.set("graphics", "width","540")
+Config.set("graphics", "height","1200")
 from sqlalchemy import func, Table, Column, Integer, ForeignKey, String, CHAR, Float, Boolean, create_engine
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -80,10 +83,11 @@ class Meal_Plan(Base):
     snack_percentage = Column(Integer)
     day_range = Column(Integer)
     meal_id_and_ingredient_id__unit__amount_list = Column(String)
+    cals_per_day = Column(Float)
     shopping_list = Column(String)
     adjusted = Column(Boolean)
 
-    def init(self, name, breakfast, breakfast_percentage, lunch, lunch_percentage, dinner, dinner_percentage, snack, snack_percentage, day_range, meal_id_and_ingredient_id__unit__amount_list, shopping_list, adjusted):
+    def init(self, name, breakfast, breakfast_percentage, lunch, lunch_percentage, dinner, dinner_percentage, snack, snack_percentage, day_range, meal_id_and_ingredient_id__unit__amount_list, cals_per_day, shopping_list, adjusted):
         self.name = name
         self.breakfast = breakfast
         self.breakfast_percentage = breakfast_percentage
@@ -95,8 +99,10 @@ class Meal_Plan(Base):
         self.snack_percentage = snack_percentage
         self.day_range  = day_range
         self.meal_id_and_ingredient_id__unit__amount_list = meal_id_and_ingredient_id__unit__amount_list
+        self.cals_per_day = cals_per_day
         self.shopping_list = shopping_list
         self.adjusted = adjusted
+
 
 class Settings(Base):
     __tablename__ = "settings"
@@ -222,7 +228,7 @@ class Settings_Screen(MDScreen):
             "1100.0":"arrow-up-bold-circle"
         }
         s = Session()
-        self.active_settings_id = s.query(Active).first().settings_id
+        self.active_settings_id = s.query(Active).first().settings_id if s.query(Active).first() else None
         s.close()
 
     def transition_to_meal_plan_screen(self):
@@ -439,7 +445,7 @@ class Settings_Screen(MDScreen):
                 self.settings_already_exist_dialog = MDDialog(
                     title="Profile already exists, would you like to overwrite?",
                     type="custom",
-                    size_hint=(0.9,None),
+                    size_hint=(.9,None),
                     content_cls=c,
                     radius=[20, 7, 20, 7]
                 )
@@ -507,7 +513,7 @@ class Settings_Screen(MDScreen):
         self.popup_base = MDDialog(
             title= "Search Setting Profiles",
             type="custom",
-            size_hint=(0.9,None),
+            size_hint=(.9,None),
             content_cls=c,
             on_open=c.display_search
         )
@@ -586,6 +592,7 @@ class Settings_Dialog(MDBoxLayout):
         c = Settings_Settings_Dialog(settings_id=instance.settings_id)
         self.popup_layer2 = MDDialog(
             title=instance.text,
+            size_hint=(.9, None),
             type="custom",
             content_cls=c,
             radius=[20, 7, 20, 7]
@@ -1410,6 +1417,7 @@ class Ingredient_Options_Dialog(MDBoxLayout):
         c = Delete_Ingredient_Dialog(ingredient_id=self.ingredient_id)
         self.popup_layer2_delete = MDDialog(
             title=f"Delete {self.ingredient_name} ?",
+            size_hint=(.9, None),
             type="custom",
             content_cls=c,
             radius=[20, 7, 20, 7]
@@ -3018,6 +3026,7 @@ class Add_Ing_To_Meal_Unit_Gram_Ml_Dialog(MDBoxLayout):
         self.ids.amount_input.text = str(int(self.ids.amount_input.text) + 1)
 
     def decrement_amount_button_check_validity(self):
+        ic(self.ids.amount_input.text)
         if self.ids.amount_input.text != "":
             if int(self.ids.amount_input.text) > 1:
                 self.ids.decrement_amount_button.disabled = False
@@ -3305,6 +3314,7 @@ class Meal_Plan_Item(MDBoxLayout):
                                 meal_type=self.meal_type)
         self.popup_base = MDDialog(
             title=f"Swap {self.meal_name}",
+            size_hint=(.9,None),
             type="custom",
             content_cls=c,
             radius=[20, 7, 20, 7]
@@ -3340,6 +3350,7 @@ class Swap_Options_Dialog(MDBoxLayout):
         if new_meal_id_list:
             new_random_meal_id = rd.choice(new_meal_id_list)
             self.logic.meal_id = new_random_meal_id
+            ic(self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list)
             self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1]][0] = new_random_meal_id
             self.logic.meal_plan_screen.meal_id_and_ingredient_id__unit__amount_list[self.logic.pos_in_list[0]][self.logic.pos_in_list[1]][1] = [[i.ingredient_id,i.ingredient.unit,i.ingredient.calories,i.ingredient.fats,i.ingredient.carbohydrates,i.ingredient.proteins,i.amount_numerator,i.amount_denominator,i.ingredient.name,i.ingredient.type] for i in s.query(Association).filter(Association.meal_id == new_random_meal_id).all()]
             self.logic.meal_plan_screen.adjusted = False
@@ -3481,7 +3492,7 @@ class Meal_Plan_Screen(MDScreen):
 
     def test_touch_down(self, instance, touch):
         if instance.collide_point(*touch.pos):
-            instance.event = Clock.schedule_once(lambda dt: self.test_show_eraser_button(instance), 1)
+            instance.event = Clock.schedule_once(lambda dt: self.show_button_info(instance), 1)
 
     def set_opened_infos_to_false(self,identifier):
         if identifier == "eraser":
@@ -3500,69 +3511,84 @@ class Meal_Plan_Screen(MDScreen):
                 if instance.icon == "eraser":
                     if self.erase_meal_plan_button_info_opened:
                         Clock.schedule_once(lambda dt: self.set_opened_infos_to_false("eraser"), 0)
-                        self.erase_meal_plan_button_info.dismiss()
                 elif instance.icon == "content-save-outline":
                     if self.save_meal_plan_button_info_opened:
                         Clock.schedule_once(lambda dt: self.set_opened_infos_to_false("content-save-outline"), 0)
-                        self.save_meal_plan_button_info.dismiss()
                 elif instance.icon == "folder-open-outline":
                     if self.display_saved_meal_plans_button_info_opened:
                         Clock.schedule_once(lambda dt: self.set_opened_infos_to_false("folder-open-outline"), 0)
-                        self.display_saved_meal_plans_button_info.dismiss()
                 elif instance.icon == "adjust":
                     if self.adjust_calories_button_info_opened:
                         Clock.schedule_once(lambda dt: self.set_opened_infos_to_false("adjust"), 0)
-                        self.adjust_calories_button_info.dismiss()
         except AttributeError:
             pass
 
-    def test_show_eraser_button(self, instance):
+    def show_button_info(self, instance):
         icon = instance.icon
         instance.event.cancel()
-        self.erase_meal_plan_button_info = MDDropdownMenu(
-            caller=self.ids.erase_meal_plan_button,
-            items=[
-                {
-                    "viewclass": "MDLabel",
-                    "text": "Erases the current meal plan"
-                }
-            ],
-            width_mult=4,
-            position="auto"
+        self.erase_meal_plan_button_info = MDDialog(
+            title="Erase meal plan button",
+            type="custom",
+            size_hint=(.9,None),
+            pos_hint={"center_x": .5, "center_y": .5},
+            content_cls=MDBoxLayout(
+                MDIconButton(
+                    icon="eraser",
+                ),
+                MDLabel(text="Erases the current meal plan from the screen, but doesn't delete it if you have already saved it"),
+                orientation="vertical",
+                size_hint_y=None, 
+                height=MDApp.get_running_app().root.height*.1
+            ),
+            radius=(20,7,20,7)
         )
-        self.save_meal_plan_button_info = MDDropdownMenu(
-            caller=self.ids.save_meal_plan_button,
-            items=[
-                {
-                    "viewclass": "MDLabel",
-                    "text": "Saves the current meal plan or saves the changes"
-                }
-            ],
-            width_mult=4,
-            position="auto"
+        self.save_meal_plan_button_info = MDDialog(
+            title="Save meal plan button",
+            type="custom",
+            size_hint=(.9,None),
+            pos_hint={"center_x": .5, "center_y": .5},
+            content_cls=MDBoxLayout(
+                MDIconButton(
+                    icon="content-save-outline",
+                ),
+                MDLabel(text="Gives you the options to save your currently displayed meal plan or to save the changes you made to it"),
+                orientation="vertical",
+                size_hint_y=None, 
+                height=MDApp.get_running_app().root.height*.1
+            ),
+            radius=(20,7,20,7)
         )
-        self.display_saved_meal_plans_button_info = MDDropdownMenu(
-            caller=self.ids.display_saved_meal_plans_button,
-            items=[
-                {
-                    "viewclass": "MDLabel",
-                    "text": "Displays saved meal plans to load or delete them"
-                }
-            ],
-            width_mult=4,
-            position="auto"
-
+        self.display_saved_meal_plans_button_info = MDDialog(
+            title="My saved meal plans button",
+            type="custom",
+            size_hint=(.9,None),
+            pos_hint={"center_x": .5, "center_y": .5},
+            content_cls=MDBoxLayout(
+                MDIconButton(
+                    icon="folder-open-outline",
+                ),
+                MDLabel(text="Displays your saved meal plans and lets you delete or load them"),
+                orientation="vertical",
+                size_hint_y=None, 
+                height=MDApp.get_running_app().root.height*.1
+            ),
+            radius=(20,7,20,7)
         )
-        self.adjust_calories_button_info = MDDropdownMenu(
-            caller=self.ids.adjust_calories_button,
-            items=[
-                {
-                    "viewclass": "MDLabel",
-                    "text": "Adjusts the amount of calories in the meal plan according to your daily calorie goal"
-                }
-            ],
-            width_mult=4,
-            position="auto"
+        self.adjust_calories_button_info = MDDialog(
+            title="Adjust calories button",
+            type="custom",
+            size_hint=(.9,None),
+            pos_hint={"center_x": .5, "center_y": .5},
+            content_cls=MDBoxLayout(
+                MDIconButton(
+                    icon="adjust",
+                ),
+                MDLabel(text="Adjusts the amount of calories in the meal plan according to your daily calorie goal"),
+                orientation="vertical",
+                size_hint_y=None, 
+                height=MDApp.get_running_app().root.height*.1
+            ),
+            radius=(20,7,20,7)
         )
         if icon == "eraser":
             self.erase_meal_plan_button_info.open()
@@ -3616,7 +3642,6 @@ class Meal_Plan_Screen(MDScreen):
                         title="Save Meal Plan",
                         type="custom",
                         size_hint=(.9, None),
-                        height=MDApp.get_running_app().root.height*.8,
                         pos_hint={"center_x": .5, "center_y": .65},
                         content_cls=c,
                         radius=[20, 7, 20, 7]
@@ -3624,6 +3649,7 @@ class Meal_Plan_Screen(MDScreen):
                     c.logic = self
                     c.popup_base = self.popup_base
                     self.popup_base.open()
+                    c.ids.meal_plan_name.focus = True
                 else:
                     c = Save_Meal_Plan_Changes_Dialog() # gives option to save changes
                     self.popup_base = MDDialog(
@@ -3771,6 +3797,7 @@ class Meal_Plan_Screen(MDScreen):
     def adjust_calories(self):
         if self.adjust_calories_button_check_validity() and not self.adjust_calories_button_info_opened:
             if MDApp.get_running_app().root.ids.settings_screen.ids.calories_per_day.text != "":
+                ic()
                 calorie_goal = float(MDApp.get_running_app().root.ids.settings_screen.ids.calories_per_day.text)
                 below = False
                 for i in range(self.day_range)[::-1]: # one loop = one day # Backwards to keep the order correct cause kivy iterates backwards over the children by default
@@ -3861,6 +3888,7 @@ class Save_Meal_Plan_Changes_Dialog(MDBoxLayout):
             Meal_Plan.dinner_percentage : self.logic.dinner_percentage,
             Meal_Plan.day_range : self.logic.day_range,
             Meal_Plan.meal_id_and_ingredient_id__unit__amount_list : str(self.logic.meal_id_and_ingredient_id__unit__amount_list),
+            Meal_Plan.cals_per_day : sum([sum([sum([l[2] * l[6] / l[7] for l in k[1]]) for k in j]) for j in self.logic.meal_id_and_ingredient_id__unit__amount_list])/self.logic.day_range,
             Meal_Plan.shopping_list : str(self.logic.shopping_list),
             Meal_Plan.adjusted : self.logic.adjusted
             }
@@ -3887,10 +3915,11 @@ class Load_Meal_Plan_Dialog(MDBoxLayout):
                 text=i.name,
                 meal_plan_id=i.id,
                 secondary_text=f"{'Breakfast, ' if i.breakfast and any([i.lunch, i.snack, i.dinner]) else 'Breakfast' if i.breakfast else ''}{'Lunch, ' if i.lunch and any([i.snack, i.dinner]) else 'Lunch' if i.lunch else ''}{'Snack, ' if i.snack and i.dinner else 'Snack' if i.snack else ''}{'Dinner' if i.dinner else ''}",
-                tertiary_text=f"placeholder, should display the calories per day",
+                tertiary_text=f"{round(i.cals_per_day,2)} kcals per day",
                 on_release=self.open_select_meal_plan_options_dialog
                 )
             )
+            ic(i.cals_per_day)
         s.close()
 
     def open_select_meal_plan_options_dialog(self,listitem):
@@ -3919,6 +3948,7 @@ class Select_Meal_Plan_Options_Dialog(MDBoxLayout):
         c = Delete_Meal_Plan_Dialog(meal_plan_id=self.meal_plan_id)
         self.popup_delete_layer3 = MDDialog(
             title="Delete meal plan?",
+            size_hint=(.9, None),
             type="custom",
             content_cls=c,
             pos_hint={"center_x": .5, "center_y": .5},
@@ -3984,46 +4014,21 @@ class Save_Meal_Plan_Dialog(MDBoxLayout):
         s = Session()
         meal_plan_query = s.query(Meal_Plan).filter(Meal_Plan.name == self.ids.meal_plan_name.text).first()
         if meal_plan_query:
-            if not meal_plan_query.id == s.query(Active).first().meal_plan_id:
-                c = Meal_Plan_Already_Exists_Dialog(meal_plan_id=meal_plan_query.id)
-                self.popup_meal_plan_already_exists_layer2 = MDDialog(
-                    title=f"{meal_plan_query.name} already exists, would you like to overwrite?",
-                    type="custom",
-                    size_hint=(.9, None),
-                    pos_hint={"center_x": .5, "center_y": .5},
-                    content_cls=c,
-                    radius=[20, 7, 20, 7]
-                )
-                c.meal_plan_name = meal_plan_query.name
-                s.close()
-                c.logic = self.logic
-                c.popup_base = self.popup_base
-                c.breakfast = self.breakfast
-                c.lunch = self.lunch
-                c.snack = self.snack
-                c.dinner = self.dinner
-                c.day_range = self.day_range
-                c.meal_id_and_ingredient_id__unit__amount_list = self.meal_id_and_ingredient_id__unit__amount_list
-                c.shopping_list = self.shopping_list
-                c.adjusted = self.adjusted
-                c.popup_meal_plan_already_exists_layer2 = self.popup_meal_plan_already_exists_layer2
-                self.popup_meal_plan_already_exists_layer2.open()
-            else:
-                meal_plan_query.name = self.ids.meal_plan_name.text
-                meal_plan_query.breakfast = self.logic.breakfast
-                meal_plan_query.breakfast_percentage = self.logic.breakfast_percentage
-                meal_plan_query.lunch = self.logic.lunch
-                meal_plan_query.lunch_percentage = self.logic.lunch_percentage
-                meal_plan_query.snack = self.logic.snack
-                meal_plan_query.dinner_percentage = self.logic.dinner_percentage
-                meal_plan_query.dinner = self.logic.dinner
-                meal_plan_query.snack_percentage = self.logic.snack_percentage
-                meal_plan_query.day_range = self.logic.day_range
-                meal_plan_query.meal_id_and_ingredient_id__unit__amount_list = str(self.logic.meal_id_and_ingredient_id__unit__amount_list)
-                meal_plan_query.shopping_list = str(self.logic.shopping_list)
-                meal_plan_query.adjusted = self.logic.adjusted
-                s.commit()
-                s.close()
+            c = Meal_Plan_Already_Exists_Dialog(meal_plan_id=meal_plan_query.id)
+            self.popup_meal_plan_already_exists_layer2 = MDDialog(
+                title=f"{meal_plan_query.name} already exists, would you like to overwrite?",
+                type="custom",
+                size_hint=(.9, None),
+                pos_hint={"center_x": .5, "center_y": .5},
+                content_cls=c,
+                radius=[20, 7, 20, 7]
+            )
+            c.meal_plan_name = meal_plan_query.name
+            s.close()
+            c.logic = self.logic
+            c.popup_base = self.popup_base
+            c.popup_meal_plan_already_exists_layer2 = self.popup_meal_plan_already_exists_layer2
+            self.popup_meal_plan_already_exists_layer2.open()
         else:
             new_meal_plan = Meal_Plan(
                 name=self.ids.meal_plan_name.text,
@@ -4037,6 +4042,7 @@ class Save_Meal_Plan_Dialog(MDBoxLayout):
                 snack_percentage=self.logic.snack_percentage,
                 day_range=self.logic.day_range,
                 meal_id_and_ingredient_id__unit__amount_list=str(self.logic.meal_id_and_ingredient_id__unit__amount_list),
+                cals_per_day=sum([sum([sum([l[2] * l[6] / l[7] for l in k[1]]) for k in j]) for j in self.logic.meal_id_and_ingredient_id__unit__amount_list])/self.logic.day_range,
                 shopping_list=str(self.logic.shopping_list),
                 adjusted=self.logic.adjusted
             )
@@ -4044,7 +4050,10 @@ class Save_Meal_Plan_Dialog(MDBoxLayout):
             s.commit()
             meal_plan_id = new_meal_plan.id
             self.meal_plan_screen.active_meal_plan_id = meal_plan_id
+            self.meal_plan_screen.load_meal_plan_settings(meal_plan_id)
+            self.meal_plan_screen.set_page_icon_validity_status()
             self.meal_plan_screen.display_page_title()
+            self.meal_plan_screen.erase_meal_plan_and_save_meal_plan_button_check_validity()
             s.query(Active).update({Active.meal_plan_id: meal_plan_id})
             s.commit()
             s.close()
@@ -4055,6 +4064,7 @@ class Meal_Plan_Already_Exists_Dialog(MDBoxLayout):
     def __init__(self, meal_plan_id, *args, **kwargs):
         super(Meal_Plan_Already_Exists_Dialog,self).__init__(*args, **kwargs)
         self.meal_plan_id = meal_plan_id
+        self.meal_plan_screen = MDApp.get_running_app().root.ids.meal_plan_screen
 
     def cancel(self):
         self.popup_meal_plan_already_exists_layer2.dismiss()
@@ -4073,11 +4083,17 @@ class Meal_Plan_Already_Exists_Dialog(MDBoxLayout):
         meal_plan_query.snack_percentage = self.logic.snack_percentage
         meal_plan_query.day_range = self.logic.day_range
         meal_plan_query.meal_id_and_ingredient_id__unit__amount_list = str(self.logic.meal_id_and_ingredient_id__unit__amount_list)
+        meal_plan_query.cals_per_day = sum([sum([sum([l[2] * l[6] / l[7] for l in k[1]]) for k in j]) for j in self.logic.meal_id_and_ingredient_id__unit__amount_list])/self.logic.day_range
         meal_plan_query.shopping_list = str(self.logic.shopping_list)
         meal_plan_query.adjusted = self.logic.adjusted
         s.query(Active).update({Active.meal_plan_id: self.meal_plan_id})
         s.commit()
         s.close()
+        self.meal_plan_screen.load_meal_plan_settings(self.meal_plan_id)
+        self.meal_plan_screen.set_page_icon_validity_status()
+        self.meal_plan_screen.display_page_title()
+        self.meal_plan_screen.erase_meal_plan_and_save_meal_plan_button_check_validity()
+        MDApp.get_running_app().root.ids.meal_plan_screen.display_page_title()
         self.popup_meal_plan_already_exists_layer2.dismiss()
         self.popup_base.dismiss()
 
@@ -4326,7 +4342,10 @@ class Shopping_List_Screen(MDScreen):
             "Spice":(.95,.95,.99,1)
         }
         s = Session()
-        self.shopping_list = eval(s.query(Meal_Plan).get(s.query(Active).first().meal_plan_id).shopping_list) if s.query(Active).first().meal_plan_id else []
+        if s.query(Active).first():
+            self.shopping_list = eval(s.query(Meal_Plan).get(s.query(Active).first().meal_plan_id).shopping_list) if s.query(Active).first().meal_plan_id else []
+        else:
+            self.shopping_list = []
         s.close()
         self.sort_value = 5
         self.sort_order = True
@@ -4700,6 +4719,8 @@ class Main_Logic(MDScreen):
 
     def __init__(self, *args, **kwargs):
         super(Main_Logic, self).__init__(*args, **kwargs)
+    
+    def initiate_active(self):
         s = Session()
         if not s.query(Active).first():
             s.add(Active(settings_id=None,
@@ -4775,7 +4796,7 @@ class MainApp(MDApp):
         return Main_Logic()
     
     def on_start(self):
-        Base.metadata.create_all(bind=engine)
+        self.root.initiate_active()
         self.root.load_active_profile()
         self.root.get_ingredients()
         self.root.get_meals()
@@ -4783,3 +4804,18 @@ class MainApp(MDApp):
 
 if __name__ == "__main__":
     MainApp().run()
+
+
+# yet to implement::
+# from kivy.core.window import Window
+
+# class MyAppClass():
+#     def __init__(self, **kwargs):
+#         super(MyAppClass, self).__init__(**kwargs)
+#         Window.bind(on_keyboard=self.hook_keyboard) # binds the hook_keyboard function to any keyboard event
+
+#     def hook_keyboard(self, window, key, *largs):
+#         if key == 27:  # 27 is the escape key
+#             print("Back button pressed")
+#             # Here you can call the function you want to execute
+#             return True  # if you want to stop the propagation of the event
