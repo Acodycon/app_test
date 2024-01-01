@@ -68,7 +68,6 @@
                 OneLineIconListItem:
                     text: "Settings"
                     on_release:
-                        app.root.ids.screen_manager.get_screen("Settings_Screen").load_active_settings()
                         app.root.ids.screen_manager.current = "Settings_Screen"
                         root.set_state("close")
                     IconLeftWidget:
@@ -252,47 +251,54 @@
     MDBoxLayout:
         name: "Box_Name_And_Icons"
         id: box_name_and_icons
+        orientation: "vertical"
         size_hint_y: None
-        height: meal_name.height*1.5
-        Widget:
-            size_hint_x:.05
-        MDIconButton:
-            id: icon_meal_type
-            icon_size: dp(25)
-            pos_hint: {"center_y":.5}
-            theme_text_color: "Custom"
-            on_release:
-                root.show_type()
-        MDLabel:
-            id: meal_name
-            text: "meal title"
-            theme_text_color: "Custom"
-            text_color: 1,1,1,1
-            font_style: "H5"
+        height: meal_name.height + icon_meal_type.height*1.5
+        MDBoxLayout:
+            MDIconButton:
+                id: icon_meal_type
+                icon_size: dp(25)
+                pos_hint: {"center_y":.5,"left":1}
+                theme_text_color: "Custom"
+                on_release:
+                    root.show_type()
+            Widget:
+            MDIconButton:
+                id: icon_meal_sweet_savory
+                icon_size: dp(25)
+                pos_hint: {"center_y":.5,"right":.8}
+                theme_text_color: "Custom"
+                on_release:
+                    root.show_sweet_savory()
+            MDIconButton:
+                id: icon_meal_hot_cold
+                icon_size: dp(25)
+                pos_hint: {"center_y":.5,"right":.9}
+                theme_text_color: "Custom"
+                on_release:
+                    root.show_hot_cold()
+            MDIconButton:
+                icon: "swap-horizontal"
+                icon_size: dp(25)
+                pos_hint: {"center_y":.5,"right":1}
+                on_release:
+                    root.open_swap_options_dialog()
+        MDBoxLayout:
             size_hint_y: None
-            height: self.texture_size[1]
-        MDIconButton:
-            id: icon_meal_sweet_savory
-            icon_size: dp(25)
-            pos_hint: {"center_y":.5}
-            theme_text_color: "Custom"
-            on_release:
-                root.show_sweet_savory()
-        MDIconButton:
-            id: icon_meal_hot_cold
-            icon_size: dp(25)
-            pos_hint: {"center_y":.5}
-            theme_text_color: "Custom"
-            on_release:
-                root.show_hot_cold()
-        MDIconButton:
-            icon: "swap-horizontal"
-            icon_size: dp(25)
-            pos_hint: {"top":1}
-            on_release:
-                root.open_swap_options_dialog()
-        Widget:
-            size_hint_x:.05
+            height: meal_name.height
+            Widget:
+                size_hint_x:1
+            MDLabel:
+                id: meal_name
+                text: "meal title"
+                theme_text_color: "Custom"
+                text_color: 1,1,1,1
+                font_style: "H5"
+                size_hint_x:8
+                size_hint_y: None
+                height: self.texture_size[1]
+            Widget:
+                size_hint_x:1
     MDBoxLayout:
         name: "Box_Stats"
         id: box_stats
@@ -546,7 +552,7 @@
         size_hint: 1,None
 <Meal_Plan_Settings_Dialog>:
     size_hint_y: None
-    height: app.root.height*.6
+    height: app.root.height*.8
     orientation: "vertical"
     day_range_decrement_button: day_range_decrement_button
     day_range: day_range
@@ -569,9 +575,7 @@
     snack_percent_increment_button: snack_percent_increment_button
     set_max_snack_button: set_max_snack_button
     dinner: dinner
-    dinner_percent_decrement_button: dinner_percent_decrement_button
     dinner_percent_label: dinner_percent_label
-    dinner_percent_increment_button: dinner_percent_increment_button
     apply_settings_button: apply_settings_button
     MDLabel:
         size_hint_y:1
@@ -621,12 +625,6 @@
                 root.check_apply_settings_button_validity()
                 root.set_percentage_availability_breakfast()
         MDIconButton:
-            id: set_min_breakfast_button
-            icon: "chevron-double-down"
-            pos_hint: {"center_y":.5}
-            on_release:
-                root.set_min_breakfast()
-        MDIconButton:
             id: breakfast_percent_decrement_button
             icon: "minus"
             pos_hint: {"center_y":.5}
@@ -643,12 +641,20 @@
             pos_hint: {"center_y":.5}
             on_release:
                 root.increment_breakfast_percentage()
-        MDIconButton:
-            id: set_max_breakfast_button
-            icon: "chevron-double-up"
-            pos_hint: {"center_y":.5}
-            on_release:
-                root.set_max_breakfast()
+        MDBoxLayout:
+            orientation: "vertical"
+            MDIconButton:
+                id: set_max_breakfast_button
+                icon: "chevron-double-up"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.set_max_breakfast()
+            MDIconButton:
+                id: set_min_breakfast_button
+                icon: "chevron-double-down"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.set_min_breakfast()
     MDBoxLayout:
         size_hint_y:1
         Widget:
@@ -662,12 +668,6 @@
             on_active:
                 root.check_apply_settings_button_validity()
                 root.set_percentage_availability_lunch()
-        MDIconButton:
-            id: set_min_lunch_button
-            icon: "chevron-double-down"
-            pos_hint: {"center_y":.5}
-            on_release:
-                root.set_min_lunch()
         MDIconButton:
             id: lunch_percent_decrement_button
             icon: "minus"
@@ -685,12 +685,20 @@
             pos_hint: {"center_y":.5}
             on_release:
                 root.increment_lunch_percentage()
-        MDIconButton:
-            id: set_max_lunch_button
-            icon: "chevron-double-up"
-            pos_hint: {"center_y":.5}
-            on_release:
-                root.set_max_lunch()
+        MDBoxLayout:
+            orientation: "vertical"
+            MDIconButton:
+                id: set_max_lunch_button
+                icon: "chevron-double-up"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.set_max_lunch()
+            MDIconButton:
+                id: set_min_lunch_button
+                icon: "chevron-double-down"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.set_min_lunch()
     MDBoxLayout:
         size_hint_y:1
         Widget:
@@ -704,12 +712,6 @@
             on_active:
                 root.check_apply_settings_button_validity()
                 root.set_percentage_availability_snack()
-        MDIconButton:
-            id: set_min_snack_button
-            icon: "chevron-double-down"
-            pos_hint: {"center_y":.5}
-            on_release:
-                root.set_min_snack()
         MDIconButton:
             id: snack_percent_decrement_button
             icon: "minus"
@@ -727,42 +729,35 @@
             pos_hint: {"center_y":.5}
             on_release:
                 root.increment_snack_percentage()
-        MDIconButton:
-            id: set_max_snack_button
-            icon: "chevron-double-up"
-            pos_hint: {"center_y":.5}
-            on_release:
-                root.set_max_snack()
+        MDBoxLayout:
+            orientation: "vertical"
+            MDIconButton:
+                id: set_max_snack_button
+                icon: "chevron-double-up"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.set_max_snack()
+            MDIconButton:
+                id: set_min_snack_button
+                icon: "chevron-double-down"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.set_min_snack()
     MDBoxLayout:
         size_hint_y:1
-        Widget:
-            size_hint_x:1
         MDLabel:
             text: "dinner"
-            size_hint_x:2
-        Widget:
-            size_hint_x:1.2
+            halign: "center"
         MDCheckbox:
             id: dinner
-            size_hint_x:.8
             on_active:
                 root.check_apply_settings_button_validity()
                 root.set_percentage_availability_dinner()
-        Widget:
-            size_hint_x:1
-        MDIconButton:
-            id: dinner_percent_decrement_button
-            icon: "minus"
-            pos_hint: {"center_y":.5}
         MDLabelPercentage:
             id: dinner_percent_label
             theme_text_color: "Custom"
             percentage: 25
             halign: "center"
-        MDIconButton:
-            id: dinner_percent_increment_button
-            icon: "plus"
-            pos_hint: {"center_y":.5}
     MDBoxLayout:
         size_hint_y:1
         Widget:
@@ -826,6 +821,10 @@
                     MDTextField:
                         id: profile_name_input
                         size_hint_x: 4
+                        on_text:
+                            root.open_gender_dropdown() if not root.active_settings_id else None
+                        on_focus:
+                            app.root.open_text_input_dialog(self,"Name")
                     Widget:
                         size_hint_x: 1
                 MDBoxLayout:
@@ -882,10 +881,13 @@
                         hint_text: "in kg"
                         input_filter: "float"
                         multiline: False
+                        on_focus:
+                            app.root.open_number_input_dialog(self,"Weight")
                         on_text:
                             root.display_BMR()
                             root.display_TDEE()
                             root.display_cals_per_day()
+                            height_input.focus = True if not root.active_settings_id else False
                     Widget:
                         size_hint_x: 1
                 MDBoxLayout:
@@ -900,10 +902,13 @@
                         hint_text: "in cm"
                         input_filter: "float"
                         multiline: False
+                        on_focus:
+                            app.root.open_number_input_dialog(self,"Height")
                         on_text:
                             root.display_BMR()
                             root.display_TDEE()
                             root.display_cals_per_day()
+                            age_input.focus = True if not root.active_settings_id else False
                     Widget:
                         size_hint_x: 1
                 MDBoxLayout:
@@ -917,6 +922,8 @@
                         size_hint_x: 4
                         input_filter: "float"
                         multiline: False
+                        on_focus:
+                            app.root.open_number_input_dialog(self,"Age")
                         on_text:
                             root.display_BMR()
                             root.display_TDEE()
@@ -961,7 +968,7 @@
             orientation: "vertical"
             size_hint: .5,1.5
             padding: dp(25)
-            MDRoundFlatButton:
+            MDRaisedButton:
                 pos_hint: {"center_x":.5}
                 text: "Save Settings"
                 on_release:
@@ -971,21 +978,19 @@
     settings_search_result_list: settings_search_result_list
     orientation: "vertical"
     size_hint_y: None
-    height: app.root.height *.4
+    height: app.root.height *.6
     MDTextField:
         id: settings_search_input
         pos_hint: {"top":1}
-        size_hint_y: 1.5
         hint_text: "Name"
         on_text:
             root.display_search(self)
     ScrollView:
-        size_hint_y: 8.5
         MDList:
             id: settings_search_result_list
 
 <Settings_Settings_Dialog>:
-    size_hint_y: .8,None
+    size_hint_y: None
     height: app.root.height *.1
     Widget:
         size_hint: .5,None
@@ -1007,7 +1012,7 @@
         size_hint: .5,None
 
 <Delete_Settings_Dialog>:
-    size_hint: .8,None
+    size_hint_y: None
     height: app.root.height *.1
     Widget:
         size_hint: 6,None
@@ -1029,7 +1034,7 @@
         size_hint: 1,None
 
 <Settings_Already_Exist_Dialog>:
-    size_hint: .8,None
+    size_hint_y: None
     height: app.root.height *.1
     Widget:
         size_hint: 6,None
@@ -1262,7 +1267,10 @@
         MDTextField:
             id: add_ing_name
             size_hint_x: 2
+            on_focus:
+                app.root.open_text_input_dialog(self,"Name")
             on_text:
+                root.open_unit_dropdown() if not self.focus else None
                 root.add_button_check_validity()
         Widget:
             size_hint_x: 1
@@ -1310,7 +1318,10 @@
             size_hint_x:2
             hint_text: "per 100 grams" if add_ing_unit.icon == "weight-gram" else "per 100 mls" if add_ing_unit.icon == "cup" else "per piece" if add_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Calories")
             on_text:
+                add_ing_fats.focus = True if not self.focus else False
                 root.add_button_check_validity()
         Widget:
             size_hint_x: 1
@@ -1326,7 +1337,10 @@
             size_hint_x:2
             hint_text: "per 100 grams" if add_ing_unit.icon == "weight-gram" else "per 100 mls" if add_ing_unit.icon == "cup" else "per piece" if add_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Fats")
             on_text:
+                add_ing_carbohydrates.focus = True if not self.focus else False
                 root.add_button_check_validity()
         Widget:
             size_hint_x: 1
@@ -1342,7 +1356,10 @@
             size_hint_x:2
             hint_text: "per 100 grams" if add_ing_unit.icon == "weight-gram" else "per 100 mls" if add_ing_unit.icon == "cup" else "per piece" if add_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Carbohydrates")
             on_text:
+                add_ing_proteins.focus = True if not self.focus else False
                 root.add_button_check_validity()
         Widget:
             size_hint_x: 1
@@ -1358,7 +1375,10 @@
             size_hint_x:2
             hint_text: "per 100 grams" if add_ing_unit.icon == "weight-gram" else "per 100 mls" if add_ing_unit.icon == "cup" else "per piece" if add_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Proteins")
             on_text:
+                root.open_divisibility_dropdown() if not self.focus and add_ing_unit.icon == "puzzle-outline" else None
                 root.add_button_check_validity()
         Widget:
             size_hint_x: 1
@@ -1543,6 +1563,8 @@
             size_hint_x:2
             hint_text: "per 100 grams" if update_ing_unit.icon == "weight-gram" else "per 100 mls" if update_ing_unit.icon == "cup" else "per piece" if update_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Calories")
             on_text:
                 root.update_button_check_validity()
         Widget:
@@ -1559,6 +1581,8 @@
             size_hint_x:2
             hint_text: "per 100 grams" if update_ing_unit.icon == "weight-gram" else "per 100 mls" if update_ing_unit.icon == "cup" else "per piece" if update_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Fats")
             on_text:
                 root.update_button_check_validity()
         Widget:
@@ -1575,6 +1599,8 @@
             size_hint_x:2
             hint_text: "per 100 grams" if update_ing_unit.icon == "weight-gram" else "per 100 mls" if update_ing_unit.icon == "cup" else "per piece" if update_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Carbohydrates")
             on_text:
                 root.update_button_check_validity()
         Widget:
@@ -1591,6 +1617,8 @@
             size_hint_x:2
             hint_text: "per 100 grams" if update_ing_unit.icon == "weight-gram" else "per 100 mls" if update_ing_unit.icon == "cup" else "per piece" if update_ing_unit.icon == "puzzle-outline" else ""
             input_filter: "float"
+            on_focus:
+                app.root.open_number_input_dialog(self,"Proteins")
             on_text:
                 root.update_button_check_validity()
         Widget:
@@ -2681,6 +2709,7 @@
 <Add_Ing_To_Meal_Unit_Gram_Ml_Dialog>:
     size_hint_y: None
     height: app.root.height *.8
+    decrement_amount_button: decrement_amount_button
     unit_label: unit_label
     amount_input: amount_input
     ing_stats_label: ing_stats_label
@@ -2700,6 +2729,12 @@
             size_hint_y:1
             Widget:
                 size_hint_x:1
+            MDIconButton:
+                id: decrement_amount_button
+                icon: "minus"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.decrement_amount()
             MDTextField:
                 id: amount_input
                 hint_text: "enter amount"
@@ -2709,6 +2744,12 @@
                 on_text:
                     root.refresh_stats()
                     root.confirm_button_check_validity()
+                    root.decrement_amount_button_check_validity()
+            MDIconButton:
+                icon: "plus"
+                pos_hint: {"center_y":.5}
+                on_release:
+                    root.increment_amount()
             Widget:
                 size_hint_x:1
             MDLabel:
@@ -2758,16 +2799,16 @@
             MDBoxLayout:
                 orientation: "vertical"
                 MDLabel:
-                    text: "kcals"
+                    text: "Calories"
                     halign: "center"
                 MDLabel:
-                    text: "fats"
+                    text: "Fats"
                     halign: "center"
                 MDLabel:
-                    text: "carbohydrates"
+                    text: "Carbohydrates"
                     halign: "center"
                 MDLabel:
-                    text: "proteins"
+                    text: "Proteins"
                     halign: "center"
             MDBoxLayout:
                 orientation: "vertical"
@@ -3012,3 +3053,36 @@
                     root.apply_filter()
             Widget:
                 size_hint_x: 1
+<Text_Input_Dialog>:
+    size_hint_y: None
+    height: text_input.height
+    text_input: text_input
+    MDTextField:
+        size_hint_x:9
+        id: text_input
+        on_text_validate:
+            root.apply(self)
+    MDIconButton:
+        icon: "close"
+        pos_hint: {"center_y":.5}
+        size_hint_x:1
+        on_release:
+            text_input.text = ""
+            text_input.focus = True
+<Number_Input_Dialog>:
+    size_hint_y: None
+    height: number_input.height
+    number_input: number_input
+    MDTextField:
+        size_hint_x:9
+        id: number_input
+        input_type: "number"
+        on_text_validate:
+            root.apply(self)
+    MDIconButton:
+        icon: "close"
+        pos_hint: {"center_y":.5}
+        size_hint_x:1
+        on_release:
+            number_input.text = ""
+            number_input.focus = True
